@@ -1,0 +1,18 @@
+# Core data science libraries
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.4.2
+xgboost==2.0.3
+
+# Visualization
+matplotlib==3.8.4
+seaborn==0.13.2
+
+# Handling imbalanced datasets
+imbalanced-learn==0.12.2
+
+# Jupyter Notebook
+ipykernel==6.29.4
+
+# (Optional) Model interpretability
+shap==0.45.0
