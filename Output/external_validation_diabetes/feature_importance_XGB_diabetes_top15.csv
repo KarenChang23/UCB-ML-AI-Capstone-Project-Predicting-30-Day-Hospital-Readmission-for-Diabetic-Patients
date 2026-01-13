@@ -1,0 +1,16 @@
+,importance
+HbA1c_level,0.466189
+blood_glucose_level,0.2729328
+age,0.05886871
+hypertension,0.05460009
+heart_disease,0.039183993
+smoking_history_No Info,0.03408461
+bmi,0.027244916
+gender_Male,0.013768015
+gender_Female,0.008348981
+smoking_history_never,0.0052969716
+smoking_history_ever,0.0051250565
+smoking_history_not current,0.0050721476
+smoking_history_former,0.004978551
+smoking_history_current,0.0043062265
+gender_Other,0.0
