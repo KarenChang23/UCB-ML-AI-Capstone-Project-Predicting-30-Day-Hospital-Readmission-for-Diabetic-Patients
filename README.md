@@ -1,130 +1,103 @@
-# UCB-ML-AI-Capstone-Project: Predicting 30-Day Hospital Readmission for Diabetic Patients
+# UCB-ML-AI-Capstone-Project-Predicting-30-Day-Hospital-Readmission-for-Diabetic-Patients
 
 ## Overview
-This capstone project was completed as part of the UC Berkeley Professional Certificate in Machine Learning and Artificial Intelligence. The goal is to use machine learning to predict whether a diabetic patient will be readmitted to the hospital within 30 days of discharge and to evaluate how well these models generalize across different real-world datasets.
+This project is part of the UC Berkeley Professional Certificate in Machine Learning and Artificial Intelligence. It builds machine learning models to predict whether a diabetic patient will be readmitted to the hospital within 30 days after discharge and demonstrates model robustness through external validation on an independent diabetes dataset.
 
-## Research Question
-Can machine learning models accurately predict patient risk and diabetes-related outcomes across different healthcare datasets?
+## Problem Statement
+Hospital readmissions within 30 days are costly and often preventable. As a licensed RN in Taiwan, I have seen how difficult it can be to identify high-risk patients at the time of discharge. This project uses machine learning to support early intervention and better discharge planning.
 
 ---
 
 ## Datasets
 
-### Primary Dataset
-**Diabetes 130-US hospitals for years 1999–2008**  
-Source: UCI Machine Learning Repository  
-Link: https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008  
-Records: 101,766 patient encounters  
-
-This dataset contains detailed hospital encounter data including demographics, diagnoses, medications, laboratory results, admission types, discharge disposition, and readmission status.
-
-Target variable:
-- `readmitted` → converted into `readmitted_binary` (1 = readmitted within 30 days, 0 = otherwise)
-
----
+### Primary Dataset (Capstone)
+**Name**: Diabetes 130-US hospitals for years 1999–2008  
+**Source**: UCI Machine Learning Repository  
+**Link**: https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008  
+**Records**: 101,766 patient encounters  
+**Target**: `readmitted` → converted to `readmitted_binary` (`1` = readmitted within 30 days, `0` = otherwise)
 
 ### External Validation Dataset (Second Dataset)
+**Name**: Diabetes Prediction Dataset  
+**Source**: Kaggle  
+**Link**: https://www.kaggle.com/datasets/iammustafatz/diabetes-prediction-dataset  
+**Records**: 100,000+ patients  
+**Target**: `diabetes` (`1` = diabetic, `0` = non-diabetic)
 
-**Diabetes Prediction Dataset**  
-Source: Kaggle  
-Link: https://www.kaggle.com/datasets/iammustafatz/diabetes-prediction-dataset  
-Records: 100,000+ patients  
-
-This dataset contains population-level diabetes risk factors including:
-- Age  
-- Gender  
-- Body Mass Index (BMI)  
-- HbA1c level  
-- Blood glucose level  
-- Smoking history  
-- Hypertension  
-- Heart disease  
-
-Target variable:
-- `diabetes` (1 = diabetic, 0 = non-diabetic)
-
-Although this dataset does not contain hospital readmission labels, it captures core metabolic and demographic features that overlap strongly with the UCI hospital dataset. It is used to test whether the learned feature relationships generalize beyond a single hospital system.
+This second dataset includes population-level metabolic and demographic risk factors such as **age**, **BMI**, **HbA1c**, **blood glucose**, **smoking history**, **hypertension**, and **heart disease**. Although it does not contain hospital readmission labels, it is used to test whether the learned feature relationships generalize beyond a single hospital system.
 
 ---
 
-## Key Features
-- Age, gender, race  
-- Number of inpatient, outpatient, and emergency visits  
-- Time in hospital  
-- Diagnosis codes  
-- Diabetes medication and insulin usage  
-- HbA1c test results  
-- Discharge disposition  
+## Key Features Used (Primary Dataset)
+- Patient demographics (age, gender, race)
+- Hospitalization details (time in hospital, number of prior visits)
+- Diagnosis codes (diag_1, diag_2, diag_3)
+- Diabetes medication usage and insulin status
+- Discharge disposition and admission type
+- Lab values (e.g., A1C result)
+
+## Data Preprocessing
+- Dropped irrelevant and high-missing columns
+- Encoded categorical variables (Label Encoding / One-Hot as needed)
+- Balanced the training data for classification tasks using SMOTE (for readmission)
+
+## Models Compared
+- Logistic Regression (baseline)
+- XGBoost (main model for performance + feature importance)
+- (Optional comparisons in earlier iterations: Decision Tree, Random Forest)
 
 ---
 
-## Methodology
+## Results (Highlights)
 
-### 1. Exploratory Data Analysis (EDA)
-- Examined feature distributions, missing values, and class imbalance  
-- Analyzed how readmission rates vary across age, diagnoses, medication use, and hospital utilization  
+### Primary Task: 30-Day Readmission Prediction (UCI)
+The project produces standard evaluation artifacts such as:
+- Classification report (precision/recall/F1)
+- Confusion matrix
+- ROC curve (AUC)
+- Feature importance (XGBoost)
 
-### 2. Data Preprocessing
-- Removed high-missing and non-informative features  
-- Encoded categorical variables  
-- Applied SMOTE to balance the readmission class  
+Outputs are saved under the `output/` folder by target.
 
-### 3. Feature Engineering
-- Grouped diagnosis codes  
-- Created medication change indicators  
-- Derived risk-related features from visit history  
+### External Validation: Kaggle Diabetes Dataset
+To evaluate generalization, the same modeling approach was tested on the Kaggle dataset.
 
-### 4. Modeling
-Models were trained on the UCI hospital dataset and evaluated on both datasets:
+**Performance (Kaggle external validation):**
+- Logistic Regression ROC-AUC: **0.9625**
+- XGBoost ROC-AUC: **0.9800**
 
-- Logistic Regression  
-- XGBoost  
+**Top drivers (XGBoost):**
+- HbA1c_level
+- blood_glucose_level
+- age
+- hypertension
+- heart_disease
 
-Evaluation metrics:
-- Accuracy  
-- Precision  
-- Recall  
-- F1-score  
-- ROC-AUC  
-- Confusion Matrix  
+This supports that the model captures meaningful diabetes-related risk signals that transfer to an independent dataset.
 
-The Kaggle dataset was used to validate whether similar features (age, HbA1c, glucose, etc.) remain predictive when applied to an independent population.
-
----
-
-## Results
-
-The XGBoost model achieved the strongest performance for predicting 30-day hospital readmission on the UCI hospital dataset, with strong recall for identifying high-risk patients. When applied to the Kaggle dataset, the model continued to show meaningful predictive power for diabetes risk, confirming that the learned feature relationships generalize across different data sources.
-
-Key findings:
-- Prior inpatient visits, insulin usage, and HbA1c levels were among the most important predictors  
-- External validation showed consistent predictive trends across datasets  
+Artifacts saved in:
+`output/external_validation_diabetes/`
+- `classification_report_LogReg_diabetes.csv`
+- `classification_report_XGB_diabetes.csv`
+- `confusion_matrix_LogReg_diabetes.png`
+- `confusion_matrix_XGB_diabetes.png`
+- `roc_LogReg_diabetes.png`
+- `roc_XGB_diabetes.png`
+- `feature_importance_XGB_diabetes.png`
 
 ---
 
-## Why This Matters
-
-Hospital readmissions are expensive and stressful for patients. By predicting high-risk patients at discharge, healthcare providers can intervene earlier with follow-up care, medication adjustments, or patient education.  
-
-Using two independent datasets strengthens the credibility of this project by demonstrating that the model learns true physiological and behavioral risk patterns, not just hospital-specific data artifacts.
-
----
-
-## Tools & Libraries
-- Python (Pandas, NumPy, Scikit-learn, XGBoost, Imbalanced-learn)  
-- Jupyter Notebook  
-- Matplotlib & Seaborn  
-- GitHub  
-
----
+## Tools Used
+- Python (pandas, numpy, scikit-learn, xgboost, imbalanced-learn)
+- Jupyter Notebook
+- matplotlib, seaborn
+- GitHub for version control and documentation
 
 ## Next Steps
-- Hyperparameter tuning  
-- SHAP-based model explainability  
-- Deployment via Streamlit for clinical use  
-- Testing on additional hospital systems  
-
----
+- Hyperparameter tuning (GridSearchCV / RandomizedSearchCV)
+- Add SHAP for explainable AI insights
+- Deploy a simple demo (e.g., Streamlit) for non-technical users
+- Validate on additional hospital/system datasets if available
 
 ## Author
 Karen Chang  
