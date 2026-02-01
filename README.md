@@ -2,7 +2,7 @@
 
 ## Overview
 This project is part of the **UC Berkeley Professional Certificate in Machine Learning and Artificial Intelligence**.  
-It builds machine learning models to predict whether a diabetic patient will be readmitted to the hospital within **30 days after discharge** and evaluates **model robustness through external validation** on an independent diabetes dataset.
+It builds machine learning models to predict whether a diabetic patient will be readmitted to the hospital within **30 days after discharge** and evaluates **model robustness through cross-validation and external validation**.
 
 The goal is to translate machine learning outputs into **actionable clinical insights** that support discharge planning and reduce preventable hospital readmissions.
 
@@ -15,14 +15,14 @@ This project uses real-world hospital data from over **100,000 patient encounter
 The models:
 - Predict **30-day readmission risk**
 - Identify **key drivers of readmission**
-- Validate whether these patterns generalize to a **second independent diabetes dataset**
+- Validate whether learned patterns generalize beyond a single dataset
 
 The final system produces interpretable risk scores that can be used by nurses, case managers, and hospital administrators to prioritize follow-up care.
 
 ---
 
 ## Research Question
-Which patient, medication, and hospitalization factors best predict 30-day readmission among diabetic patients, and do these learned patterns generalize to a separate diabetes population?
+Which patient, medication, and hospitalization factors best predict 30-day readmission among diabetic patients, and do these learned patterns generalize across datasets?
 
 ---
 
@@ -40,164 +40,119 @@ Which patient, medication, and hospitalization factors best predict 30-day readm
 
 ---
 
-### External Validation Dataset (Second Dataset)
+### External Dataset (Secondary Dataset)
 **Name:** Diabetes Prediction Dataset  
 **Source:** Kaggle  
 **Link:** https://www.kaggle.com/datasets/iammustafatz/diabetes-prediction-dataset  
 **Records:** 100,000+ patients  
 
-**Target:** `diabetes` (1 = diabetic, 0 = non-diabetic)
-
-This dataset includes population-level metabolic and lifestyle risk factors such as HbA1c, blood glucose, BMI, smoking history, hypertension, heart disease, age, and gender.  
-It is used to test whether learned diabetes risk patterns generalize beyond a single hospital system.
+This dataset contains population-level metabolic and lifestyle features such as HbA1c, blood glucose, BMI, hypertension, heart disease, age, and gender.  
+It is used to assess whether diabetes-related risk patterns learned by the models remain clinically meaningful outside a hospital encounter dataset.
 
 ---
 
 ## Key Features Used (Primary Dataset)
 - Patient demographics (age, gender, race)
-- Hospitalization details (time in hospital, number of prior visits)
+- Hospital utilization history (time in hospital, number of inpatient and emergency visits)
 - Diagnosis codes (diag_1, diag_2, diag_3)
 - Diabetes medication usage and insulin status
-- Discharge disposition and admission type
-- Lab values (A1C result)
+- Discharge disposition and admission source
+- Laboratory results (A1C)
 
 ---
 
 ## Data Cleaning and Feature Engineering
 - Removed irrelevant and high-missing columns  
-- Encoded categorical variables (Label Encoding and One-Hot Encoding)  
+- Encoded categorical variables using one-hot encoding  
 - Standardized numeric features  
-- Balanced imbalanced classification targets using **SMOTE**  
-- Created multiple modeling targets:
-  - `readmitted_binary`
-  - `time_in_hospital`
-  - `number_inpatient`
-  - `A1Cresult`
-  - `insulin`
+- Addressed class imbalance using **SMOTE**  
+- Prevented target leakage by removing original readmission labels  
+
+Primary modeling target:
+- `readmitted_binary`
+
+Additional exploratory targets were analyzed for supporting insights.
 
 ---
 
 ## Exploratory Data Analysis (EDA)
-EDA was used to explore:
-- Readmission rate by age group  
-- Length of stay vs. readmission  
-- Medication and insulin usage vs. outcomes  
-- Lab values and diagnoses vs. outcomes  
+EDA was conducted to examine:
+- Class imbalance in readmission outcomes  
+- Relationships between prior hospital utilization and readmission  
+- Effects of diagnoses, medications, and discharge disposition  
 
-All visualizations include readable labels, descriptive titles, legible axes, and appropriate scaling.
-
----
-
-## Models and Evaluation
-
-**Classification models**
-- Logistic Regression (baseline)
-- XGBoost (main model)
-
-**Regression models**
-- XGBoost Regressor
-
-Models were evaluated using:
-- Train / test splits  
-- ROC-AUC for classification  
-- RMSE for regression  
-- Confusion matrices  
-- Feature importance  
-
-ROC-AUC was used for classification tasks because the datasets are imbalanced and the goal is to evaluate ranking ability rather than raw accuracy. RMSE was used for regression tasks to measure average prediction error in hospital utilization outcomes.
+All visualizations include human-readable labels, descriptive titles, and appropriate scaling for non-technical interpretation.
 
 ---
 
-## Results (Primary UCI Dataset)
+## Modeling and Evaluation
 
-The models successfully identified patients at high risk for 30-day readmission.
+### Models
+- **Logistic Regression** (baseline, interpretable)
+- **XGBoost Classifier** (tree-based ensemble)
 
-Important drivers included:
-- Prior inpatient and emergency visits  
-- Discharge disposition  
-- Diagnoses  
-- Diabetes medications and insulin  
-- Lab results (A1C)  
+### Evaluation Strategy
+- Stratified train / test split  
+- **GridSearchCV with 5-fold cross-validation**
+- Primary metric: **ROC-AUC** (appropriate for imbalanced classification)
 
-XGBoost provided both higher predictive performance and interpretable feature importance for clinicians.
-
-All plots include labeled axes, descriptive titles, and readable scales for non-technical interpretation.
-
-Outputs are stored in:
-```text
-├── output/
-│ ├── A1Cresult/
-│ │ ├── classification_report_A1Cresult.csv
-│ │ ├── confusion_matrix_A1Cresult.png
-│ │ └── feature_importance_A1Cresult_XGB.png
-│ ├── insulin/
-│ │ ├── classification_report_insulin.csv
-│ │ ├── confusion_matrix_insulin.png
-│ │ └── feature_importance_insulin_XGB.png
-│ ├── number_inpatient/
-│ │ ├── feature_importance_number_inpatient_XGB.png
-│ │ └── predictions_number_inpatient.csv
-│ ├── readmitted_binary/
-│ │ ├── classification_report.csv
-│ │ ├── classification_report_readmitted_binary.csv
-│ │ ├── confusion_matrix.png
-│ │ ├── confusion_matrix_readmitted_binary.png
-│ │ ├── feature_importance_readmitted_binary_XGB.png
-│ │ ├── roc_readmitted_binary_LogReg.png
-│ │ └── roc_readmitted_binary_XGB.png
-│ └── time_in_hospital/
-│ │ ├── feature_importance_time_in_hospital_XGB.png
-│ │ └── predictions_time_in_hospital.csv
-```
+### Hyperparameter Tuning
+Grid search was used to tune:
+- Logistic Regression: regularization strength and solver
+- XGBoost: number of estimators, learning rate, max depth, subsampling, and column sampling
 
 ---
 
-## External Validation Results (Kaggle Dataset)
+## Cross-Validation Results (5-Fold ROC-AUC)
 
-To evaluate generalization, the same modeling approach was tested on an independent dataset.
+| Model | CV ROC-AUC |
+|------|-----------|
+| Logistic Regression (GridSearch) | 0.6506 |
+| XGBoost (GridSearch) | 0.6769 |
 
-| Model | ROC-AUC |
-|------|--------|
-| Logistic Regression | 0.9625 |
-| XGBoost | 0.9800 |
+---
 
-Top predictive features:
-- HbA1c_level  
-- blood_glucose_level  
-- age  
-- hypertension  
-- heart_disease  
+## Held-Out Test Set Results
 
-These match known medical risk factors and confirm that the model learned clinically meaningful and transferable patterns.
+| Model | Test ROC-AUC |
+|------|-------------|
+| Logistic Regression (GridSearch) | 0.6601 |
+| XGBoost (GridSearch) | 0.6858 |
 
-This reduces the risk that the model is simply memorizing one hospital system and increases confidence in real-world deployment.
+XGBoost consistently outperformed Logistic Regression, indicating that nonlinear feature interactions play an important role in predicting readmission risk.
 
+---
 
-Artifacts are stored in:
-```text
-├── output/
-│ ├── external_validation_diabetes/
-│ │ ├── classification_report_LogReg_diabetes.csv
-│ │ ├── classification_report_XGB_diabetes.csv
-│ │ ├── confusion_matrix_LogReg_diabetes.png
-│ │ ├── confusion_matrix_XGB_diabetes.png
-│ │ ├── feature_importance_XGB_diabetes.png
-│ │ ├── feature_importance_XGB_diabetes_top15.csv
-│ │ ├── predictions_diabetes_external_validation.csv
-│ │ ├── roc_LogReg_diabetes.png
-│ │ └── roc_XGB_diabetes.png
-```
+## Feature Importance (XGBoost)
+
+The most influential predictors of 30-day readmission include:
+- `number_inpatient`
+- `discharge_disposition_id`
+- Diagnosis-related indicators (e.g., V57, V58)
+- `number_emergency`
+- Diabetes medication changes (e.g., glipizide)
+
+These features align with clinical intuition and highlight actionable opportunities for post-discharge intervention.
+
+---
+
+## External Dataset Analysis (Supplementary Validation)
+
+When applied to the external diabetes dataset, model performance decreased as expected due to dataset differences and target definition changes.  
+However, the most influential predictors (glycemic control, comorbidities, age) remained consistent with known clinical risk factors.
+
+This supports the conclusion that the models capture **clinically meaningful diabetes-related risk patterns**, even outside a hospital encounter context.
 
 ---
 
 ## Business and Clinical Interpretation
-The model enables hospitals to:
-- Identify high-risk diabetic patients at discharge  
-- Prioritize nurse follow-ups and care management  
-- Reduce preventable readmissions  
-- Improve outcomes while lowering costs  
+This project demonstrates how machine learning can support:
+- Early identification of high-risk diabetic patients at discharge  
+- Prioritization of nurse follow-ups and care coordination  
+- Reduction of preventable readmissions  
+- Improved patient outcomes with more efficient resource allocation  
 
-Without this system, high-risk and low-risk patients are treated the same, increasing avoidable returns.
+Without such a system, hospitals risk treating high- and low-risk patients identically, leading to avoidable readmissions.
 
 ---
 
@@ -220,48 +175,18 @@ UCB-ML-AI-Capstone-Project-Predicting-30-Day-Hospital-Readmission-for-Diabetic-P
 │ ├── Diabetes Prediction Dataset/
 │ │ └── diabetes_prediction_dataset.csv
 ├── output/
-│ ├── A1Cresult/
-│ │ ├── classification_report_A1Cresult.csv
-│ │ ├── confusion_matrix_A1Cresult.png
-│ │ └── feature_importance_A1Cresult_XGB.png
-│ ├── external_validation_diabetes/
-│ │ ├── classification_report_LogReg_diabetes.csv
-│ │ ├── classification_report_XGB_diabetes.csv
-│ │ ├── confusion_matrix_LogReg_diabetes.png
-│ │ ├── confusion_matrix_XGB_diabetes.png
-│ │ ├── feature_importance_XGB_diabetes.png
-│ │ ├── feature_importance_XGB_diabetes_top15.csv
-│ │ ├── predictions_diabetes_external_validation.csv
-│ │ ├── roc_LogReg_diabetes.png
-│ │ └── roc_XGB_diabetes.png
-│ ├── insulin/
-│ │ ├── classification_report_insulin.csv
-│ │ ├── confusion_matrix_insulin.png
-│ │ └── feature_importance_insulin_XGB.png
-│ ├── number_inpatient/
-│ │ ├── feature_importance_number_inpatient_XGB.png
-│ │ └── predictions_number_inpatient.csv
 │ ├── readmitted_binary/
-│ │ ├── classification_report.csv
-│ │ ├── classification_report_readmitted_binary.csv
-│ │ ├── confusion_matrix.png
-│ │ ├── confusion_matrix_readmitted_binary.png
-│ │ ├── feature_importance_readmitted_binary_XGB.png
-│ │ ├── roc_readmitted_binary_LogReg.png
-│ │ └── roc_readmitted_binary_XGB.png
-│ └── time_in_hospital/
-│ │ ├── feature_importance_time_in_hospital_XGB.png
-│ │ └── predictions_time_in_hospital.csv
+│ ├── A1Cresult/
+│ ├── insulin/
+│ ├── number_inpatient/
+│ ├── time_in_hospital/
+│ └── external_validation_diabetes/
 ├── Processed Data/
 │ └── processed_diabetes_data.csv
-├── Capstone_Readmission_Enhanced_Notebook.ipynb
 ├── INFERENCE.md
 ├── LICENSE
 ├── README.md
-├── .gitignore
 └── requirements.txt
-```
-All notebooks contain step-by-step comments, modular code, and reproducible pipelines to ensure clarity and maintainability.
 
 ---
 
@@ -274,10 +199,9 @@ All notebooks contain step-by-step comments, modular code, and reproducible pipe
 ---
 
 ## Next Steps
-- Hyperparameter tuning  
-- Add SHAP for explainability  
-- Deploy a Streamlit demo  
-- Validate on additional healthcare datasets  
+- Add SHAP for enhanced model explainability
+- Perform temporal validation on more recent datasets
+- Deploy a Streamlit-based clinical risk dashboard
 
 ---
 
